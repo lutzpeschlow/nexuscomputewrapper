@@ -79,6 +79,7 @@ class NCW():
         as result a listening port is delivered
         """
         self.listening_port = self.nc.start()
+        print ("port: ", self.listening_port)
 
 
 
@@ -88,10 +89,13 @@ class NCW():
         
         with the token (from token file or rc file) the user is logged in
         """
+        user_id = 0
         self.my_user = self.nc.login(self.token)
-        
-
-
+        try:
+            print ("user id: ", self.my_user.loginRefId)
+        except:
+            pass
+             
 
 
     def end_nc(self):
@@ -212,37 +216,27 @@ def arg_handler():
         -t --token    token_file_name    
     if actions are: SUBMIT, DOWNLOAD a file is needed, which defines further information for this action
     """
+    dir_current = os.getcwd()
+    dir_script = os.path.dirname(os.path.realpath(__file__))
+    term_program = os.getenv("TERM_PROGRAM")
     # setup of argparse
     parser = argparse.ArgumentParser(description='Nexus Compute Wrapper')
     parser.add_argument('-a', '--action', choices=['STATUS','SUBMIT','DOWNLOAD'], help='Action to perform')
     parser.add_argument('-f', '--file', help='Define Actionfile for SUBMIT/DOWNLOAD')
     parser.add_argument('-t', '--token', type=str, help='Token File which contains token')
     parser.add_argument('-d', '--debug', action="store_true", help='Debug action turned on')
-    # use argument file, help or command line arguments
-    if len(sys.argv) <= 1:
-        try:
-            dir_current = os.getcwd()
-            dir_script = os.path.dirname(os.path.realpath(__file__))
-            file_in = open(dir_script + '/arguments.txt','r')
-            line_list = file_in.readlines()
-            file_in.close()
-            argument_list = [ e.strip() for e in line_list ]
-            print (argument_list)
-            args = parser.parse_args(argument_list)
-        except: 
-            args = parser.parse_args(['-h'])
-    else:
-        args = parser.parse_args()            
+    args = parser.parse_args()            
     # debug information
     if args.debug:
         print ("========== DEBUG is ON ...")
         print (dir_current)
         print (dir_script)
+        print (term_program)
         print (type(parser), type(args))
         print ("ARGUMENTS: ", args)
         print ("ARG VARs:  ", args.action, args.file, args.token, args.debug)
         print ("==========")
-          
+    # action handling, SUBMIT and DOWNLOAD require an action file 
     if args.action:
         print (args.action)
         if args.action == "SUBMIT" or args.action == "DOWNLOAD":
@@ -252,14 +246,21 @@ def arg_handler():
             else:
                 print (" ERROR: action file not found ...\n")
                 args = parser.parse_args(['-h'])               
-            
+    # token handling      
     if args.token:
         print (args.token)
         if os.path.exists(args.token):
             print (" token file found ...")
         else:
             print (" WARNING: token file not found ...")
-             
+    if not args.token:
+        print ("no args.token, try to read rc token file ...")
+        if os.path.exists(dir_script + "/ncwrc"):
+            print (" rc token file found ...")
+        else: 
+            print (" rc token file not found ...\n")
+            args = parser.parse_args(['-h'])                           
+    # return argparse Namespace object         
     return args
  
 
@@ -279,14 +280,12 @@ def main():
     print ("MAIN:",args.action, args.file, args.token)
     # instance of object, connect to nexus as a user
     ncw = NCW(args)
-    # any actions
-    print (type(ncw))
-    
+    # actions
     if args.action == "STATUS":
         status_list = ncw.get_user_status()
         for line in status_list:
             print (line)
-
+    
 
     # logout and end process
     ncw.end_nc()
@@ -306,5 +305,17 @@ if __name__ == "__main__":
 
 
 
-
+# storage:
+#    # use argument file, help or command line arguments
+#    if len(sys.argv) <= 1:
+#        try:
+#            file_in = open(dir_script + '/arguments.txt','r')
+#            line_list = file_in.readlines()
+#            file_in.close()
+#            argument_list = [ e.strip() for e in line_list ]
+#            print (argument_list)
+#            args = parser.parse_args(argument_list)
+#        except: 
+#            args = parser.parse_args(['-h'])
+#    else:
 
