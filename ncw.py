@@ -179,9 +179,82 @@ class NCW():
             print (entry_dict['id'], " - ", entry_dict['name'])
         
 
+# SUBMIT ================================================================================
+    
+    def submit_files(self):
+        """
+        submit files
+
+        - reads a submission file
+        - create document and job(s)
+        - transfer analysis files to Nexus compute cloud
+        - submit jobs
+
+        during doc creation and job submission several IDs are created,
+        these will be saved later in a log file that can be used
+        """
+        print ("submit files ...")
+        submit_dict = get_submission_info(self.arg_space.file)
+        # variables
+        log_lines = []
+        file_names = []
+        job_names = []
+        hardware_config = 'medium'
+        # all previously collected submission infomation into log file
+        log_lines.append("collected submission information")
+        print ("collected submission information")
+        for k,v in submit_dict.items():
+            print (k,v)
+            if k == 'DOC'  or  k == "CALC_DIR": 
+                log_lines.append(str(k))
+                log_lines.append(" " + str(v))
+            if k == 'JOBS' or k == 'CALC_FILES':
+                log_lines.append(k)
+                for entry in v:
+                    log_lines.append(" " + str(entry))
+        # create and load document in nexus
+        doc_id = self.my_user.new_document(submit_dict['DOC'])
+        doc_obj = self.my_user.load_document(doc_id)
+        print ("loaded document into memory: ", doc_id)
+        # upload files and prepare local file names
+        print ("uploading files ...")
+        log_lines.append("uploading analysis files ...")
+        for local_file_name in submit_dict['CALC_FILES']:
+            local_dir, file_name = os.path.split(local_file_name)
+            log_lines.append("  " + local_file_name + " " + file_name)
+            doc_obj.upload_file(local_file_name, file_name, progress)
+            file_names.append(file_name)
+        # submit jobs
+        job_names = submit_dict['JOBS']
+        log_lines.append("DOC_ID:"+doc_id)
+        log_lines.append("CALC_DIR:"+submit_dict["CALC_DIR"])
+        for i,job in enumerate(job_names):
+            job_id = doc_obj.submit_job(job_name=job, 
+                solver='nastran', solver_version=2024.2, hardware=hardware_config, 
+                nb_nodes=1, files=[file_names[i]], 
+                command="nast20242 mem=100mb smp=1 dmp=1 scr=yes sdir=../scratch "+file_names[i], 
+                max_runtime_hours=1, dry_run=False)
+            print ("submitted: ", job, " job_id: ", job_id)
+            log_lines.append("submitted " + job + " with file " + file_names[i])
+            log_lines.append(" JOB_ID:" + job_id)
+        # close open document
+        doc_obj.close()
+        # write log file
+        file_out = open("ncw_output_submit.txt", 'w')
+        file_out.writelines([l+"\n" for l in log_lines])
+        file_out.close()
+        # send back document object
+        return doc_obj
+
+
+
+
+
+
 
 
 # ---------------------------------------------------------------------------------------
+
 
 
 def get_help():
@@ -202,6 +275,8 @@ def get_help():
     print ("   --action=SUBMIT --file=submit_file.txt")
     print ("   --action=STATUS --token=token_file.txt")
     print (" ")
+
+
 
 
 
@@ -265,6 +340,96 @@ def arg_handler():
  
 
 
+
+
+def progress(speed, elapsed_time, transferred_size):
+    """
+    upload progress
+    """
+    with open('save_job_status_messages.txt','a') as status_file:
+        status_file.write(str(speed/1000**2) + "  " + str(elapsed_time) + "  " + str(transferred_size/1000**2) + "\n")
+    # print ("%.2fMB/s %.2fs %.2fMB" % (speed/1000**2, elapsed_time, transferred_size/1000**2))
+
+
+
+
+
+def get_submission_info(submit_info_file):
+    """
+    get submission info
+    
+    for analysis a submit_info_file is read that contains information
+    as document name, job name and analysis file names
+
+    if there is no document name a default name is provided
+    if there are no job names, some default job names are provided
+
+    the directory of submit info file is assumed as the same directory where the analysis files
+    are stored except the analysis file definition contains a dedicated directory,
+    for example:
+        file:a1.dat
+        file:a2.dat
+    means, that these files are located in the same directory of submit_info_file,
+    and with:
+        file:c:/tmp/dir_a1/a1.dat
+        file:c:/tmp/dir_a2/a2.dat
+    the directory of the file definition is used to upload the file to nexus environment
+
+    the complete infomation is stored in a dictionary for further usage
+    """
+    # startup info
+    print ("get submission info from file: ", submit_info_file)
+    # variables
+    return_dict = {"DOC":"","CALC_DIR":"","JOBS":[],"CALC_FILES":[]}
+    job_list = []
+    file_list = []
+    current_time = datetime.now().strftime("%Y%m%d%H%M%S")
+    # split in calc_dir and according files
+    calc_dir, info_file = os.path.split(submit_info_file)
+    print ("splitted calc dir and info file: ", calc_dir, info_file, len(calc_dir))
+    return_dict["CALC_DIR"] = calc_dir
+    # read submission info file
+    file_in = open(submit_info_file,'r')
+    line_list = file_in.readlines()
+    file_in.close()
+    # collect and assign infos to dictionary
+    for line in line_list:
+        line = line.strip()
+        entry_list = line.split(':')
+        if entry_list[0].upper() == "DOC":
+            return_dict["DOC"] = entry_list[1]
+        if entry_list[0].upper() == "JOB":
+            return_dict["JOBS"].append(entry_list[1])
+        if entry_list[0].upper() == "FILE":
+            if "/" in line or "\\" in line:
+                return_dict["CALC_FILES"].append(line[5:]) 
+            else:
+                return_dict["CALC_FILES"].append(entry_list[1] )
+    # clean up and fill up the dictionary with defaults if needed
+    # assign doc if does not exist and get job_list and file_list
+    # assign job if no job exist
+    for k,v in return_dict.items():
+        if k == "DOC" and len(v)==0:
+            return_dict["DOC"] = "doc_" + current_time
+        if k == "JOBS":
+            job_list= v
+        if k == "CALC_FILES":
+            file_list = v
+    if len(job_list) == 0:
+        job_list.append('job_' + current_time)
+    # to less job names available, fill them up
+    if len(job_list)<len(file_list):
+        last_job_name = job_list[len(job_list)-1]
+        for i in range(len(file_list)-len(job_list)):
+            job_list.append(last_job_name + "_" + str(i+1))
+        return_dict["JOBS"] = job_list
+    # number of jobs is greater then number of files, reduce jobs
+    if len(job_list) > len(file_list):
+        for i in range(len(job_list)-len(file_list)):
+            job_list.pop()
+    # dictionary with doc, job, analysis file information
+    return return_dict
+
 # =======================================================================================
 
 
@@ -281,11 +446,15 @@ def main():
     # instance of object, connect to nexus as a user
     ncw = NCW(args)
     # actions
+    # STATUS
     if args.action == "STATUS":
         status_list = ncw.get_user_status()
         for line in status_list:
             print (line)
-    
+    # SUBMIT
+    if args.action == "SUBMIT":
+        ncw.submit_files()
+
 
     # logout and end process
     ncw.end_nc()

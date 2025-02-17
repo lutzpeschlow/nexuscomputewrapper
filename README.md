@@ -72,5 +72,27 @@ information what should be calculated a submission file should be provided.
 A possible usage of the script to submit files via Nexus compute python client wrapper could be:
 python ncw.py --action SUBMIT --file ncw_submit_file.txt
 
+A sample submit file could be:
+doc:doc_name
+job:job_name
+file:a1.dat
+file:a2.dat
 
+If there is no document name, a document name including time stamp is created, if there are not enough job names, the last job name is used with an additional counter, 
+if there is no job name also the time stamp is used to create a sample job name. 
+
+A minimum required submit file would be for example:
+file:a1.dat
+file:a2.dat
+containing the analysis files.
+
+After job submission in Nexus environment an output file is created that contains also document IDs 
+and job IDs that are needed later in case of downloading results. So some lines in submit output file 
+could be for example:
+DOC_ID:f78149a5-9382-47cb-bf4b-6978624c3a23
+ JOB_ID:34c0aa3c-e9d5-95ad-1f08-c440b4f397bd
+ JOB_ID:1ee30e44-2fa1-c5a7-a8af-66b08ae97487
+
+The created submit output file can be used directly for downloading results due to these formatted
+document and job ID lines.
 
