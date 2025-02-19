@@ -78,7 +78,8 @@ job:job_name
 file:a1.dat
 file:a2.dat
 
-If there is no document name, a document name including time stamp is created, if there are not enough job names, the last job name is used with an additional counter, 
+If there is no document name, a document name including time stamp is created, 
+if there are not enough job names, the last job name is used with an additional counter, 
 if there is no job name also the time stamp is used to create a sample job name. 
 
 A minimum required submit file would be for example:
@@ -95,4 +96,17 @@ DOC_ID:f78149a5-9382-47cb-bf4b-6978624c3a23
 
 The created submit output file can be used directly for downloading results due to these formatted
 document and job ID lines.
+
+During reading submission file the existence of analysis files is checked and in case of missing files,
+the list of analysis files is reduced to only existing files. The script exits if the list is empty.
+
+
+
+4) Download
+
+
+
+
+
+
 

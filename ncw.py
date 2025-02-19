@@ -179,8 +179,11 @@ class NCW():
             print (entry_dict['id'], " - ", entry_dict['name'])
         
 
+
 # SUBMIT ================================================================================
     
+
+
     def submit_files(self):
         """
         submit files
@@ -199,10 +202,12 @@ class NCW():
         log_lines = []
         file_names = []
         job_names = []
+        # solver configurations
+        solver_name     = 'nastran'
         hardware_config = 'medium'
+        version         = '2024.2'
         # all previously collected submission infomation into log file
-        log_lines.append("collected submission information")
-        print ("collected submission information")
+        log_lines.append("collected submission information:")
         for k,v in submit_dict.items():
             print (k,v)
             if k == 'DOC'  or  k == "CALC_DIR": 
@@ -212,6 +217,11 @@ class NCW():
                 log_lines.append(k)
                 for entry in v:
                     log_lines.append(" " + str(entry))
+        # if there are no analysis files left, exit with error file
+        if len(submit_dict['CALC_FILES']) == 0:
+            print ("ERROR: no calc files for submission defined ...")
+            write_report_file(submit_dict, "ncw_output_submit.err", "CR", "PRINT")
+            sys.exit(1)
         # create and load document in nexus
         doc_id = self.my_user.new_document(submit_dict['DOC'])
         doc_obj = self.my_user.load_document(doc_id)
@@ -230,7 +240,7 @@ class NCW():
         log_lines.append("CALC_DIR:"+submit_dict["CALC_DIR"])
         for i,job in enumerate(job_names):
             job_id = doc_obj.submit_job(job_name=job, 
-                solver='nastran', solver_version=2024.2, hardware=hardware_config, 
+                solver=solver_name, solver_version=version, hardware=hardware_config, 
                 nb_nodes=1, files=[file_names[i]], 
                 command="nast20242 mem=100mb smp=1 dmp=1 scr=yes sdir=../scratch "+file_names[i], 
                 max_runtime_hours=1, dry_run=False)
@@ -346,9 +356,55 @@ def progress(speed, elapsed_time, transferred_size):
     """
     upload progress
     """
-    with open('save_job_status_messages.txt','a') as status_file:
-        status_file.write(str(speed/1000**2) + "  " + str(elapsed_time) + "  " + str(transferred_size/1000**2) + "\n")
+    s = str(speed/1000**2)
+    e = str(elapsed_time)
+    t = str(transferred_size/1000**2)
+    # with open('save_job_status_messages.txt','a') as status_file:
+    #    status_file.write(s + "  " + e + "  " + t + "\n")
     # print ("%.2fMB/s %.2fs %.2fMB" % (speed/1000**2, elapsed_time, transferred_size/1000**2))
+
+
+
+
+
+def write_report_file(output_list, file_name, cr, print_flag):
+    """
+    write report file
+    
+    with file name a line list will be written into file
+    CR argument decides, whether a carriage return is written for each line
+
+    if the print flag is set, then the content will be printed
+
+    in case of dict instead of list to be printed, the dict will be converted 
+    into a list with key and value
+
+    output_list - dict or list
+    file_name   - file_name that is created
+    cr          - carriage return flag
+    print_flag  - print flag
+    """
+    # variables
+    line_list = []
+    # set carriage return
+    if cr == "CR":
+        cr = "\n"
+    else:
+        cr = ""
+    # if output list is a dictionary
+    if isinstance(output_list, dict):
+        for k,v in output_list.items():
+            line_list.append(str(k) + "  " + str(v))
+    if isinstance(output_list, list):
+        line_list = output_list
+    # print if required
+    if print_flag == "PRINT":
+        for line in line_list:
+            print (line)
+    # write content to file
+    file_out = open(file_name,"w")
+    file_out.writelines([l+cr for l in line_list])
+    file_out.close()    
 
 
 
@@ -379,14 +435,16 @@ def get_submission_info(submit_info_file):
     """
     # startup info
     print ("get submission info from file: ", submit_info_file)
-    # variables
-    return_dict = {"DOC":"","CALC_DIR":"","JOBS":[],"CALC_FILES":[]}
+    current_dir = os.getcwd()
+    print (current_dir)
+    # variable definition
+    return_dict = {"DOC":"","CALC_DIR":"","JOBS":[],"CALC_FILES":[], "ERRORS":[]}
     job_list = []
     file_list = []
     current_time = datetime.now().strftime("%Y%m%d%H%M%S")
     # split in calc_dir and according files
     calc_dir, info_file = os.path.split(submit_info_file)
-    print ("splitted calc dir and info file: ", calc_dir, info_file, len(calc_dir))
+    # print ("splitted calc dir and info file: ", calc_dir, info_file)
     return_dict["CALC_DIR"] = calc_dir
     # read submission info file
     file_in = open(submit_info_file,'r')
@@ -402,12 +460,21 @@ def get_submission_info(submit_info_file):
             return_dict["JOBS"].append(entry_list[1])
         if entry_list[0].upper() == "FILE":
             if "/" in line or "\\" in line:
-                return_dict["CALC_FILES"].append(line[5:]) 
+                file_to_check = line[5:].strip()
             else:
-                return_dict["CALC_FILES"].append(entry_list[1] )
+                if len(return_dict["CALC_DIR"]) > 0:
+                    file_to_check = return_dict["CALC_DIR"] + "/" + entry_list[1]
+                else:
+                    file_to_check = entry_list[1]
+            # check file existance
+            if os.path.exists(file_to_check):
+                print (" file check: ", file_to_check, "  PASSED")
+                return_dict["CALC_FILES"].append(file_to_check)
+            else:
+                print (" ERROR: ", file_to_check, " does not exist")
+                return_dict["ERRORS"].append("ERROR: "+file_to_check+" does not exist")
     # clean up and fill up the dictionary with defaults if needed
-    # assign doc if does not exist and get job_list and file_list
-    # assign job if no job exist
+    # assign doc if does not exist and get job_list and file_list, assign job if no job 
     for k,v in return_dict.items():
         if k == "DOC" and len(v)==0:
             return_dict["DOC"] = "doc_" + current_time
