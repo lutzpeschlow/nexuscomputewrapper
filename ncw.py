@@ -259,11 +259,66 @@ class NCW():
 
 
 
+# DOWNLOAD ==============================================================================
+    
+
+
+    def download_files(self):
+        """
+        download files
+
+        - reads a download file
+        - try to download files from definitions in download file
+
+        needed information would be a document id and job ids
+        the calc directory is used to store the files locally
+        """
+        print ("download files ...")
+        download_dict = get_download_info(self.arg_space.file)
+        for k,v in download_dict.items():
+            print (k,v)
+        # variables
+        log_lines = []
+        doc_id = download_dict["DOC_ID"]
+        job_ids = download_dict["JOB_IDS"]
+        calc_dir = download_dict["CALC_DIR"]
+        log_lines.append("doc ids and job ids:")
+        log_lines.append(" " + str(doc_id))
+        for j in job_ids:
+            log_lines.append("  " +  str(j))
+        log_lines.append("calc dir: " + calc_dir)
+        # get files from document and jobs
+        doc_obj = self.my_user.load_document(doc_id)
+        job_dict = doc_obj.list_jobs()
+        print ("get files from doc/jobs ...")
+        for job_id in job_ids:
+            job_name = job_dict[job_id]['name']
+            print ("start download of files from job_id/job_name: ", job_id, " / ", job_name)
+            log_lines.append("start download of files from job_id/job_name: "+job_id+" / "+job_name)
+            job_result_files = doc_obj.list_job_results(job_id)
+            # create locally the result directory
+            local_res_dir = calc_dir + "/" + "compute/results/" + job_name
+            os.makedirs(local_res_dir, exist_ok=True)
+            # loop ove all result files, download to local
+            for job_file in job_result_files:
+                target = calc_dir + "/" + job_file  
+                print ("  ",target)
+                log_lines.append("  " + target)
+                doc_obj.download_file(document_path=job_file,sink=target,progress=download_progress)      
+        # close open document
+        doc_obj.close() 
+        # write log file
+        file_out = open("ncw_output_download.txt", 'w')
+        file_out.writelines([l+"\n" for l in log_lines])
+        file_out.close()
 
 
 
 
-# ---------------------------------------------------------------------------------------
+
+# =======================================================================================
+
+
 
 
 
@@ -362,6 +417,19 @@ def progress(speed, elapsed_time, transferred_size):
     # with open('save_job_status_messages.txt','a') as status_file:
     #    status_file.write(s + "  " + e + "  " + t + "\n")
     # print ("%.2fMB/s %.2fs %.2fMB" % (speed/1000**2, elapsed_time, transferred_size/1000**2))
+
+
+
+
+
+def download_progress(transferred_size, total_size, speed, elapsed_time):
+    """
+    download progress
+    """
+    progress = transferred_size / total_size * 100  # percentage
+    # with open('save_job_status_messages.txt','a') as status_file:
+    #     status_file.write(str(speed/1000**2) + "  " + str(elapsed_time) + "  " + str(transferred_size/1000**2) + "\n")
+    # print("%.2f%% %.2fMB/s %.2fs %.2fMB" %(progress, speed/1000**2, elapsed_time, transferred_size/1000**2))    
 
 
 
@@ -497,7 +565,51 @@ def get_submission_info(submit_info_file):
     # dictionary with doc, job, analysis file information
     return return_dict
 
+
+
+
+
+def get_download_info(download_file):
+    """
+    get download info
+
+    if files needs to be downloaded a document id and a job id is needed,
+    all these information are saved into submission log file,
+    if that is not available, the ids can be grabbed from the status information 
+
+    an example download file could be (containing doc id, job id and optional calc dir):
+    DOC_ID:c380b241-d3dd-49c4-ae0d-0626c5f79abd
+    CALC_DIR:c:/tmp/python/nexus/dir_analysis
+    JOB_ID:28d999e4-e147-60fb-d905-9c0a454713ea
+    JOB_ID:3e49a037-1407-f897-396b-82dece509ad6
+    """
+    # variables
+    return_dict = {"DOC_ID":"","CALC_DIR":".","JOB_IDS":[]}
+    # read submission info file
+    file_in = open(download_file,'r')
+    line_list = file_in.readlines()
+    file_in.close()
+    # sort lines in dictionary
+    for line in line_list:
+        line = line.strip()
+        if ":" in line:
+            entry_list = line.split(':')
+            if entry_list[0].strip() == 'DOC_ID':
+                return_dict['DOC_ID']=entry_list[1].strip()
+            if entry_list[0].strip() == 'JOB_ID':
+                return_dict['JOB_IDS'].append(entry_list[1].strip())
+            if entry_list[0].strip() == 'CALC_DIR':
+                return_dict['CALC_DIR']=line[9:].strip()
+    # return according dictionary
+    return return_dict
+
+
+
+
+
 # =======================================================================================
+
+
 
 
 
@@ -521,11 +633,11 @@ def main():
     # SUBMIT
     if args.action == "SUBMIT":
         ncw.submit_files()
-
-
+    # DOWNLOAD
+    if args.action == "DOWNLOAD":
+        ncw.download_files()
     # logout and end process
     ncw.end_nc()
-
 
 
 
@@ -536,22 +648,3 @@ if __name__ == "__main__":
     main()   
    
 # =======================================================================================
-
-
-
-
-
-# storage:
-#    # use argument file, help or command line arguments
-#    if len(sys.argv) <= 1:
-#        try:
-#            file_in = open(dir_script + '/arguments.txt','r')
-#            line_list = file_in.readlines()
-#            file_in.close()
-#            argument_list = [ e.strip() for e in line_list ]
-#            print (argument_list)
-#            args = parser.parse_args(argument_list)
-#        except: 
-#            args = parser.parse_args(['-h'])
-#    else:
-

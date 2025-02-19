@@ -104,6 +104,25 @@ the list of analysis files is reduced to only existing files. The script exits i
 
 4) Download
 
+If using the DOWNLOAD feature, the analysis and result files can be downloaded from Nexus environment.
+
+The information what should be downloaded is delivered by a download_info_file.txt which contains
+document id, job ids and optional a calc directory as local destination. 
+
+Example for download info file :
+DOC_ID:c380b241-d3dd-49c4-ae0d-0626c5f79abd
+CALC_DIR:c:/tmp/python/nexus/dir_analysis
+JOB_ID:28d999e4-e147-60fb-d905-9c0a454713ea
+JOB_ID:3e49a037-1407-f897-396b-82dece509ad6
+
+The required ids can also be seen in a previous created submission output file. That 
+submission output file can be used directly for downloading and no modification is needed,
+the required format is also stored there.
+
+If there is no such submission file, the IDs can be defined after running a STATUS run.
+
+A possible command for using the DOWNLOAD feature would be:
+python ncw.py --action DOWNLOAD --file ncw_download_file.txt
 
 
 
