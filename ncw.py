@@ -9,7 +9,7 @@ from nexuscompute.Enums import JobStatus
 class NCW():
     """
     nexus compute wrapper class
-    
+      
     wapper around the basic commands to setup common requests
     """
 
@@ -276,7 +276,12 @@ class NCW():
         print ("download files ...")
         download_dict = get_download_info(self.arg_space.file)
         for k,v in download_dict.items():
-            print (k,v)
+            print ("   ", k,v)
+        # if there are no analysis files left, exit with error file
+        if len(download_dict['JOB_IDS']) == 0:
+            print ("ERROR: no job ids for download defined ...")
+            write_report_file(download_dict, "ncw_output_download.err", "CR", "PRINT")
+            sys.exit(1)
         # variables
         log_lines = []
         doc_id = download_dict["DOC_ID"]
@@ -296,6 +301,7 @@ class NCW():
             print ("start download of files from job_id/job_name: ", job_id, " / ", job_name)
             log_lines.append("start download of files from job_id/job_name: "+job_id+" / "+job_name)
             job_result_files = doc_obj.list_job_results(job_id)
+            print ("content of job result files ...")
             # create locally the result directory
             local_res_dir = calc_dir + "/" + "compute/results/" + job_name
             os.makedirs(local_res_dir, exist_ok=True)
@@ -304,7 +310,8 @@ class NCW():
                 target = calc_dir + "/" + job_file  
                 print ("  ",target)
                 log_lines.append("  " + target)
-                doc_obj.download_file(document_path=job_file,sink=target,progress=download_progress)      
+                status = doc_obj.download_file(document_path=job_file,sink=target,progress=download_progress)      
+                print ("status: ", status)
         # close open document
         doc_obj.close() 
         # write log file
