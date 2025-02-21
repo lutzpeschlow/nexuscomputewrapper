@@ -249,8 +249,13 @@ class NCW():
             log_lines.append(" JOB_ID:" + job_id)
         # close open document
         doc_obj.close()
-        # write log file
-        file_out = open("ncw_output_submit.txt", 'w')
+        # check log file name and count the name, the write log file
+        log_file_name = "ncw_output_submit.txt"
+        renamed_log = rename_current_log_file_name(log_file_name)
+        if renamed_log != "":
+            print ("already existing log file was renamed to: ", renamed_log)
+        print ("")
+        file_out = open(log_file_name, 'w')
         file_out.writelines([l+"\n" for l in log_lines])
         file_out.close()
         # send back document object
@@ -574,6 +579,20 @@ def get_submission_info(submit_info_file):
 
 
 
+def rename_current_log_file_name(filename):
+    return_value = ""
+    # does file alread exist
+    if os.path.exists(filename):
+        # find highest number/counter for the file using f-string
+        counter = 1
+        while os.path.exists(f"{filename}.{counter}"):
+            counter += 1
+        # rename existing file
+        os.rename(filename, f"{filename}.{counter}")
+    # as return the new last file name is sent
+    return f"{filename}.{counter}"
+    
+
 
 
 def get_download_info(download_file):
@@ -655,3 +674,26 @@ if __name__ == "__main__":
     main()   
    
 # =======================================================================================
+
+
+
+# import os
+# import shutil
+# 
+# def copy_file(filename):
+#     base_name = filename
+#     counter = 1
+#     while os.path.exists(filename):
+#         new_filename = f"{base_name}.{counter}"
+#         if not os.path.exists(new_filename):
+#             shutil.copy2(base_name, new_filename)
+#             print(f"File copied to {new_filename}")
+#             break
+#         counter += 1
+# 
+# # Usage
+# copy_file("name.txt")
+
+
+
+
