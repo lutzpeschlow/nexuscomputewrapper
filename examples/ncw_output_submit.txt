@@ -1,0 +1,15 @@
+collected submission information:
+DOC
+ doc_name2
+CALC_DIR
+ .\dir_analysis_01
+JOBS
+ job_name
+CALC_FILES
+ .\dir_analysis_01/a2.dat
+uploading analysis files ...
+  .\dir_analysis_01/a2.dat a2.dat
+DOC_ID:93e04cbb-aa7d-468f-b90a-ec1ae7016b31
+CALC_DIR:.\dir_analysis_01
+submitted job_name with file a2.dat
+ JOB_ID:c045d1eb-6b08-19d1-0520-ff474fe4e83e

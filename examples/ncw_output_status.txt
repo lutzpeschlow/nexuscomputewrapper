@@ -1,0 +1,72 @@
+number of documents: 3
+  
+ doc name/id: doc_20250219101759      1403b37d-f195-4156-9ab0-080e129afd36
+  number of jobs: 2
+   job name/id/status: job_20250219101759  f421c8da-53fc-5677-927b-14128d707d51  JobStatus.Done
+   job name/id/status: job_20250219101759_1  5e60f9fa-0803-492c-44d4-8e4e23e2b069  JobStatus.Done
+  files in document:
+   a1.dat
+   a2.dat
+   compute/results/job_20250219101759_1/a2.f04
+   compute/results/job_20250219101759_1/preprocess_output.log
+   compute/results/job_20250219101759_1/a2.log
+   compute/results/job_20250219101759_1/postprocess_output.log
+   compute/results/job_20250219101759_1/process_output.log
+   compute/results/job_20250219101759_1/a2.f06
+   compute/results/job_20250219101759/a1.log
+   compute/results/job_20250219101759/preprocess_output.log
+   compute/results/job_20250219101759/postprocess_output.log
+   compute/results/job_20250219101759/a1.f04
+   compute/results/job_20250219101759/a1.f06
+   compute/results/job_20250219101759/process_output.log
+  
+ doc name/id: doc_20250219101657      ef8c6e6d-5a2f-4b45-9175-bf78b8a30fae
+  number of jobs: 2
+   job name/id/status: job_20250219101657  fc8bc4c1-7b63-9d52-9b55-6779e116007e  JobStatus.Done
+   job name/id/status: job_20250219101657_1  b02b0909-cb5b-dd4a-f11d-85cc826e3818  JobStatus.Done
+  files in document:
+   a1.dat
+   a2.dat
+   compute/results/job_20250219101657/a1.f04
+   compute/results/job_20250219101657/postprocess_output.log
+   compute/results/job_20250219101657/preprocess_output.log
+   compute/results/job_20250219101657/process_output.log
+   compute/results/job_20250219101657/a1.log
+   compute/results/job_20250219101657/a1.f06
+   compute/results/job_20250219101657_1/preprocess_output.log
+   compute/results/job_20250219101657_1/postprocess_output.log
+   compute/results/job_20250219101657_1/a2.f04
+   compute/results/job_20250219101657_1/process_output.log
+   compute/results/job_20250219101657_1/a2.log
+   compute/results/job_20250219101657_1/a2.f06
+  
+ doc name/id: doc_20250219101317      d6a29696-2da4-4eb9-8bf1-a707440b4e23
+  number of jobs: 1
+   job name/id/status: job_20250219101317  24d3210a-bf78-1d14-2441-5b7a40ee68c5  JobStatus.Done
+  files in document:
+   a2.dat
+   compute/results/job_20250219101317/postprocess_output.log
+   compute/results/job_20250219101317/process_output.log
+   compute/results/job_20250219101317/a2.f04
+   compute/results/job_20250219101317/preprocess_output.log
+   compute/results/job_20250219101317/a2.log
+   compute/results/job_20250219101317/a2.f06
+
+
+solver configurations:
+  nastran versions 2024.2
+  nastran versions 2024.1
+  nastran versions 2023.2
+  nastran versions 2022.4
+  nastran configs subatomic
+  nastran configs minuscule
+  nastran configs slight
+  nastran configs fair
+  nastran configs decent
+  nastran configs atomic
+  nastran configs tiny
+  nastran configs small
+  nastran configs medium
+  nastran configs large
+  nastran configs larger
+  nastran configs gpu
