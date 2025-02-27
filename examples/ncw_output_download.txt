@@ -1,0 +1,19 @@
+doc ids and job ids:
+ 1403b37d-f195-4156-9ab0-080e129afd36
+  f421c8da-53fc-5677-927b-14128d707d51
+  5e60f9fa-0803-492c-44d4-8e4e23e2b069
+calc dir: .
+start download of files from job_id/job_name: f421c8da-53fc-5677-927b-14128d707d51 / job_20250219101759
+  ./compute/results/job_20250219101759/a1.log
+  ./compute/results/job_20250219101759/preprocess_output.log
+  ./compute/results/job_20250219101759/postprocess_output.log
+  ./compute/results/job_20250219101759/a1.f04
+  ./compute/results/job_20250219101759/a1.f06
+  ./compute/results/job_20250219101759/process_output.log
+start download of files from job_id/job_name: 5e60f9fa-0803-492c-44d4-8e4e23e2b069 / job_20250219101759_1
+  ./compute/results/job_20250219101759_1/a2.f04
+  ./compute/results/job_20250219101759_1/preprocess_output.log
+  ./compute/results/job_20250219101759_1/a2.log
+  ./compute/results/job_20250219101759_1/postprocess_output.log
+  ./compute/results/job_20250219101759_1/process_output.log
+  ./compute/results/job_20250219101759_1/a2.f06
