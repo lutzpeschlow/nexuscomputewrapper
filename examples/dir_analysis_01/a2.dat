@@ -1,0 +1,21 @@
+SOL 101
+CEND
+ECHO=NONE
+SET 8 = 8
+SPC=1
+LOAD=1
+DISP=8
+BEGIN BULK
+$  1   ||  2   ||  3   ||  4   ||  5   ||  6   ||  7   ||  8   ||  9   ||  10  |
+PBEAM    2      1       0.001   0.002   0.002           0.001 
+CBEAM    4       2       5       6      1.      1.       0.
+CBEAM    5       2       6       7      1.      1.       0.
+CBEAM    6       2       7       8      1.      1.       0.
+MAT1     1      7.17E9          .33     2.8-6   2.2-5
+GRID     5               0.      0.      0.
+GRID     6              .33      0.      0.
+GRID     7              .66      0.      0.
+GRID     8              1.       0.      0.
+SPC1     1       123456  5
+FORCE    1       8       0      1000.    0.     -1.      0.
+ENDDATA 
